@@ -13,3 +13,4 @@ print(clf_ffnn.momentum)
 
 clf_ffnn.fit(iris.data)
 print(clf_ffnn.coefs_)
+print(clf_ffnn.intercepts_)

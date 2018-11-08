@@ -34,8 +34,15 @@ class FeedForwardNeuralNetwork:
             layer_weight = np.array(layer_weight)
             self.coefs_.append(layer_weight)
 
-    def _initialize_intercepts(self):
-        print('initializing intercepts...')
+    def _initialize_intercepts(self, data):
+        output_neuron_size = 1
+        intercept_neuron_sizes = self.hidden_layer_sizes + [output_neuron_size]
+        for size in intercept_neuron_sizes:
+            bias_layer = []
+            for _ in range(size):
+                bias_layer.append(0)
+            bias_layer = np.array(bias_layer)
+            self.intercepts_.append(bias_layer)
     
     def _feed_forward_phase(self, data):
         return None
@@ -48,4 +55,5 @@ class FeedForwardNeuralNetwork:
 
     def fit(self, data):
         self._initialize_coefs(data)
+        self._initialize_intercepts(data)
         print('fitting...')
