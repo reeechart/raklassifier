@@ -4,16 +4,18 @@ from scipy.stats import logistic
 from copy import deepcopy
 
 class FeedForwardNeuralNetwork:
-    def __init__(self, learning_rate, hidden_layer_sizes, tol=0.0001, batch_size=1, momentum=0):
+    def __init__(self, learning_rate, hidden_layer_sizes, max_iter=300, tol=0.0001, batch_size=1, momentum=0):
         self.learning_rate = learning_rate
         self.hidden_layer_sizes = hidden_layer_sizes
+        self.max_iter = max_iter
         self.tol = tol
         self.batch_size = batch_size
         self.momentum = momentum
         self._check_validity()
         self.coefs_ = []
         self.intercepts_ = []
-        self.errors_ = []
+        self.gradients_ = []
+        self.error = 0
 
     def _check_validity(self):
         if (not self._is_hidden_layer_sizes_valid()):
@@ -48,16 +50,16 @@ class FeedForwardNeuralNetwork:
             bias_layer = np.array(bias_layer)
             self.intercepts_.append(bias_layer)
     
-    def _reset_errors(self):
-        self.errors_ = []
+    def _reset_gradients(self):
+        self.gradients_ = []
         output_neuron_size = 1
-        error_neuron_sizes = self.hidden_layer_sizes + [output_neuron_size]
-        for size in error_neuron_sizes:
-            error_layer = []
+        gradient_neuron_sizes = self.hidden_layer_sizes + [output_neuron_size]
+        for size in gradient_neuron_sizes:
+            gradient_layer = []
             for _ in range(size):
-                error_layer.append(0)
-            error_layer = np.array(error_layer)
-            self.errors_.append(error_layer)
+                gradient_layer.append(0)
+            gradient_layer = np.array(gradient_layer)
+            self.gradients_.append(gradient_layer)
     
     def _feed_forward_phase(self, batch_data, instance_target):
         result = np.array(batch_data)
@@ -100,8 +102,13 @@ class FeedForwardNeuralNetwork:
         batches = math.ceil(len(data)/self.batch_size)
         print(batch_data_list)
         print(batch_target_list)
+
+        # epochs started
+        # iter = 0
+        # while (iter < self.max_iter and self.error > self.tol):
         for batch_index in range(batches):
-            self._reset_errors()
+            self._reset_gradients()
             res = self._feed_forward_phase(batch_data_list[batch_index], batch_target_list[batch_index])
             print("this is the result for batch %d" % batch_index)
             print(res)
+            # iter += 1
