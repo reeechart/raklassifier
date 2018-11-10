@@ -15,7 +15,7 @@ class FeedForwardNeuralNetwork:
         self.coefs_ = []
         self.intercepts_ = []
         self.gradients_ = []
-        self.error = 0
+        self.error_ = 0
 
     def _check_validity(self):
         if (not self._is_hidden_layer_sizes_valid()):
@@ -106,6 +106,7 @@ class FeedForwardNeuralNetwork:
         # epochs started
         # iter = 0
         # while (iter < self.max_iter and self.error > self.tol):
+        self.error_ = 0
         for batch_index in range(batches):
             self._reset_gradients()
             res = self._feed_forward_phase(batch_data_list[batch_index], batch_target_list[batch_index])
