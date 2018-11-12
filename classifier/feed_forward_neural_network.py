@@ -50,18 +50,22 @@ class FeedForwardNeuralNetwork:
             bias_layer = np.array(bias_layer)
             self.intercepts_.append(bias_layer)
     
-    def _reset_gradients(self):
+    def _reset_gradients(self, data):
         self.gradients_ = []
+        input_neuron_size = len(data[0])
         output_neuron_size = 1
-        gradient_neuron_sizes = self.hidden_layer_sizes + [output_neuron_size]
-        for size in gradient_neuron_sizes:
-            gradient_layer = []
-            for _ in range(size):
-                gradient_layer.append(0)
-            gradient_layer = np.array(gradient_layer)
-            self.gradients_.append(gradient_layer)
+        gradient_neuron_sizes = [input_neuron_size] + self.hidden_layer_sizes + [output_neuron_size]
+        for gradient_neuron_index in range (len(gradient_neuron_sizes)-1):
+            gradient_layer_weight = []
+            for _ in range(gradient_neuron_sizes[gradient_neuron_index]):
+                gradient_neuron_weight = []
+                for _ in range(gradient_neuron_sizes[gradient_neuron_index+1]):
+                    gradient_neuron_weight.append(0)
+                gradient_layer_weight.append(gradient_neuron_weight)
+            gradient_layer_weight = np.array(gradient_layer_weight)
+            self.gradients_.append(gradient_layer_weight)
     
-    def _feed_forward_phase(self, batch_data, instance_target):
+    def _feed_forward_phase(self, batch_data, batch_target):
         result = np.array(batch_data)
         for layer_index in range(len(self.coefs_)):
             result = np.matmul(result, self.coefs_[layer_index])
@@ -76,8 +80,8 @@ class FeedForwardNeuralNetwork:
     def _backpropagation(self, batch_data, batch_target):
         return None
 
-    def _update_weight(self):
-        return None
+    def _update_weight(self, batch_data, batch_target):
+        pass
 
     def _split_data(self, data, target):
         batch_data_list = []
@@ -108,8 +112,9 @@ class FeedForwardNeuralNetwork:
         # while (iter < self.max_iter and self.error > self.tol):
         self.error_ = 0
         for batch_index in range(batches):
-            self._reset_gradients()
+            self._reset_gradients(batch_data_list[batch_index])
             res = self._feed_forward_phase(batch_data_list[batch_index], batch_target_list[batch_index])
             print("this is the result for batch %d" % batch_index)
             print(res)
+            self._update_weight(batch_data_list[batch_index], batch_target_list[batch_index])
             # iter += 1
