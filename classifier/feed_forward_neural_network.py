@@ -84,10 +84,13 @@ class FeedForwardNeuralNetwork:
 
         # delta_gradient = self._compress_delta_gradient(delta_gradient)
         # self.gradients_ += delta_gradient
+
+        diff = self.result_.ravel() - batch_target
+        self.error_ += np.sum(0.5 * diff * diff)
         
         return self.result_.ravel()
 
-    def _backpropagation(self, batch_data, batch_target, batch_result):
+    def _backpropagation(self, batch_target, batch_result):
         dg_length = len(self.delta_gradients_)
         for i in range(dg_length):
             if (i == 0):
@@ -131,7 +134,7 @@ class FeedForwardNeuralNetwork:
 
         # epochs started
         # iter = 0
-        # while (iter < self.max_iter and self.error > self.tol):
+        # while (iter < self.max_iter and self.error_ > self.tol):
         self.error_ = 0
         for batch_index in range(batches):
             self._reset_gradients(batch_data_list[batch_index])
@@ -140,6 +143,6 @@ class FeedForwardNeuralNetwork:
             print(res)
             print("doing backpropagation...")
             print("==================================================================")
-            self._backpropagation(batch_data_list[batch_index], batch_target_list[batch_index], res)
+            self._backpropagation(batch_target_list[batch_index], res)
             self._update_weight(batch_data_list[batch_index], batch_target_list[batch_index])
             # iter += 1
