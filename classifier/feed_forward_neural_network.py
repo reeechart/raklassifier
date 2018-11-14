@@ -15,7 +15,9 @@ class FeedForwardNeuralNetwork:
         self.coefs_ = []
         self.intercepts_ = []
         self.gradients_ = []
+        self.delta_gradients_ = []
         self.error_ = 0
+        self.result_ = 0
 
     def _check_validity(self):
         if (not self._is_hidden_layer_sizes_valid()):
@@ -52,30 +54,36 @@ class FeedForwardNeuralNetwork:
     
     def _reset_gradients(self, data):
         self.gradients_ = []
-        input_neuron_size = len(data[0])
         output_neuron_size = 1
-        gradient_neuron_sizes = [input_neuron_size] + self.hidden_layer_sizes + [output_neuron_size]
-        for gradient_neuron_index in range (len(gradient_neuron_sizes)-1):
-            gradient_layer_weight = []
-            for _ in range(gradient_neuron_sizes[gradient_neuron_index]):
-                gradient_neuron_weight = []
-                for _ in range(gradient_neuron_sizes[gradient_neuron_index+1]):
-                    gradient_neuron_weight.append(0)
-                gradient_layer_weight.append(gradient_neuron_weight)
-            gradient_layer_weight = np.array(gradient_layer_weight)
-            self.gradients_.append(gradient_layer_weight)
+        neuron_gradient_sizes = self.hidden_layer_sizes + [output_neuron_size]
+        for layer_size in neuron_gradient_sizes:
+            layer_gradient = []
+            for _ in range(layer_size):
+                layer_gradient.append(0)
+            self.gradients_.append(np.array(layer_gradient))
+
+    def _compress_delta_gradient(self):
+        for index in range(len(self.delta_gradients_)):
+            self.delta_gradients_[index] = np.sum(self.delta_gradients_[index], axis=0)
     
     def _feed_forward_phase(self, batch_data, batch_target):
-        result = np.array(batch_data)
+        self.result_ = np.array(batch_data)
         for layer_index in range(len(self.coefs_)):
-            result = np.matmul(result, self.coefs_[layer_index])
-            
+            self.result_ = np.matmul(self.result_, self.coefs_[layer_index])
+            self.delta_gradients_.append(self.result_)
+
             # add with bias and convert all results with sigmoid function
-            for result_index in range(len(result)):
-                result[result_index] = [x+y for x, y in zip(result[result_index], self.intercepts_[layer_index])]
-                result[result_index] = logistic.cdf(result[result_index])
+            for result_index in range(len(self.result_)):
+                self.result_[result_index] = [x+y for x, y in zip(self.result_[result_index], self.intercepts_[layer_index])]
+                self.result_[result_index] = logistic.cdf(self.result_[result_index])
+
+        print('this is delta gradient with length of %d' % len(self.delta_gradients_))
+        print(self.delta_gradients_)
+
+        # delta_gradient = self._compress_delta_gradient(delta_gradient)
+        # self.gradients_ += delta_gradient
         
-        return result
+        return self.result_
 
     def _backpropagation(self, batch_data, batch_target):
         return None
