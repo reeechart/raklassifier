@@ -70,6 +70,8 @@ class FeedForwardNeuralNetwork:
         self.result_ = np.array(batch_data)
         for layer_index in range(len(self.coefs_)):
             self.result_ = np.matmul(self.result_, self.coefs_[layer_index])
+
+            # save to delta_gradients
             self.delta_gradients_.append(self.result_)
 
             # add with bias and convert all results with sigmoid function
@@ -83,10 +85,22 @@ class FeedForwardNeuralNetwork:
         # delta_gradient = self._compress_delta_gradient(delta_gradient)
         # self.gradients_ += delta_gradient
         
-        return self.result_
+        return self.result_.ravel()
 
-    def _backpropagation(self, batch_data, batch_target):
-        return None
+    def _backpropagation(self, batch_data, batch_target, batch_result):
+        dg_length = len(self.delta_gradients_)
+        for i in range(dg_length):
+            if (i == 0):
+                # output layer
+                diff = batch_target - batch_result
+                self.delta_gradients_[-1] = self.delta_gradients_[-1] * (1 - self.delta_gradients_[-1]) * np.reshape(diff, (len(diff), 1))
+            else:
+                # hidden layers
+                sum_outputs_gradients = np.matmul(self.delta_gradients_[dg_length-i], np.transpose(self.coefs_[dg_length-i]))
+                self.delta_gradients_[dg_length-i-1] = self.delta_gradients_[dg_length-i-1] * (1 - self.delta_gradients_[dg_length-i-1]) * sum_outputs_gradients
+            
+        print('this is delta gradient with length of %d' % len(self.delta_gradients_))
+        print(self.delta_gradients_)
 
     def _update_weight(self, batch_data, batch_target):
         pass
@@ -124,5 +138,8 @@ class FeedForwardNeuralNetwork:
             res = self._feed_forward_phase(batch_data_list[batch_index], batch_target_list[batch_index])
             print("this is the result for batch %d" % batch_index)
             print(res)
+            print("doing backpropagation...")
+            print("==================================================================")
+            self._backpropagation(batch_data_list[batch_index], batch_target_list[batch_index], res)
             self._update_weight(batch_data_list[batch_index], batch_target_list[batch_index])
             # iter += 1
