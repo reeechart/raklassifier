@@ -168,5 +168,8 @@ class FeedForwardNeuralNetwork:
             for result_index in range(len(result)):
                 result[result_index] = [x+y for x, y in zip(result[result_index], self.intercepts_[layer_index])]
                 result[result_index] = logistic.cdf(result[result_index])
-        
-        return result
+
+        if result > 0.5:
+            return 1
+        else:
+            return 0
