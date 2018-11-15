@@ -40,7 +40,7 @@ class FeedForwardNeuralNetwork:
             for _ in range(neuron_sizes[neuron_index]):
                 neuron_weight = []
                 for _ in range(neuron_sizes[neuron_index+1]):
-                    neuron_weight.append(0)
+                    neuron_weight.append(0.5)
                 layer_weight.append(neuron_weight)
             layer_weight = np.array(layer_weight)
             self.coefs_.append(layer_weight)
@@ -52,13 +52,12 @@ class FeedForwardNeuralNetwork:
         for size in intercept_neuron_sizes:
             bias_layer = []
             for _ in range(size):
-                bias_layer.append(0)
+                bias_layer.append(0.5)
             bias_layer = np.array(bias_layer)
             self.intercepts_.append(bias_layer)
             self.delta_intercepts_.append(bias_layer)
     
     def _initialize_gradients(self):
-        ''' Reset the gradients to initial weight '''
         self.gradients_ = []
         output_neuron_size = 1
         neuron_gradient_sizes = self.hidden_layer_sizes + [output_neuron_size]
@@ -86,23 +85,12 @@ class FeedForwardNeuralNetwork:
             # add with bias and convert all results with sigmoid function
             for result_index in range(len(self.result_)):
                 self.result_[result_index] = [x+y for x, y in zip(self.result_[result_index], self.intercepts_[layer_index])]
-                print('this is the result for layer index %d' % result_index)
-                print(self.result_[result_index])
                 self.result_[result_index] = logistic.cdf(self.result_[result_index])
 
             # save to delta_gradients
             self.delta_gradients_.append(deepcopy(self.result_))
             if (layer_index != (len(self.coefs_)-1)):
                 self.layers_input.append(deepcopy(self.result_))
-
-        # print('this is delta gradient with length of %d' % len(self.delta_gradients_))
-        # print(self.delta_gradients_)
-
-        # print('this is layers input with length of %d' % len(self.layers_input))
-        # print(self.layers_input)
-
-        # print('this is the result')
-        # print(self.result_)
 
         diff = self.result_.ravel() - batch_target
         self.error_ += np.sum(0.5 * diff * diff)
@@ -120,20 +108,11 @@ class FeedForwardNeuralNetwork:
                 # hidden layers
                 sum_outputs_gradients = np.matmul(self.delta_gradients_[dg_length-i], np.transpose(self.coefs_[dg_length-i]))
                 self.delta_gradients_[dg_length-i-1] = self.delta_gradients_[dg_length-i-1] * (1 - self.delta_gradients_[dg_length-i-1]) * sum_outputs_gradients
-            
-        # print('this is delta gradient after backpropagation with length of %d' % len(self.delta_gradients_))
-        # print(self.delta_gradients_)
 
     def _update_weight(self, batch_data, batch_target):
         compressed_delta_input = []
         for i in range(len(self.delta_gradients_)):
             compressed_delta_input.append(np.matmul(np.transpose(self.layers_input[i]), self.delta_gradients_[i]))
-       
-        # print('this is compressed delta input')
-        # print(compressed_delta_input)
-
-        # print('this is delta coefs')
-        # print(self.delta_coefs_)
 
         compressed_delta_input = np.array(compressed_delta_input)
         for i in range(len(self.delta_coefs_)):
@@ -144,12 +123,6 @@ class FeedForwardNeuralNetwork:
         for i in range(len(self.delta_intercepts_)):
             self.delta_intercepts_[i] = self.learning_rate * self.gradients_[i] + self.momentum * self.delta_intercepts_[i]
             self.intercepts_[i] = np.add(self.intercepts_[i], self.delta_intercepts_[i])
-
-        # print('coefs after update')
-        # print(self.coefs_)
-
-        # print('intercepts after update')
-        # print(self.intercepts_)
 
     def _split_data(self, data, target):
         batch_data_list = []
@@ -183,3 +156,16 @@ class FeedForwardNeuralNetwork:
                 self._backpropagation(batch_target_list[batch_index], res)
                 self._update_weight(batch_data_list[batch_index], batch_target_list[batch_index])
             iter += 1
+
+    def predict(self, data):
+        result = np.array(data)
+        result = np.atleast_2d(result)
+        for layer_index in range(len(self.coefs_)):
+            result = np.matmul(result, self.coefs_[layer_index])
+
+            # add with bias and convert all results with sigmoid function
+            for result_index in range(len(result)):
+                result[result_index] = [x+y for x, y in zip(result[result_index], self.intercepts_[layer_index])]
+                result[result_index] = logistic.cdf(result[result_index])
+        
+        return result
