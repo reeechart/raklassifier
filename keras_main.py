@@ -1,5 +1,6 @@
 from keras.models import Sequential
 from keras.layers import Dense
+from keras.optimizers import SGD
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
@@ -19,19 +20,19 @@ data_tennis = data_tennis.drop("play", axis=1)
 data_tennis = data_tennis.values
 target_tennis = target_tennis.values
 
-
 data_train, data_test, target_train, target_test = train_test_split(
     data_tennis, target_tennis, test_size=0.1)
 
 model = Sequential()
 
-model.add(Dense(8, input_dim=4, activation='sigmoid'))
-model.add(Dense(6, activation='sigmoid'))
+model.add(Dense(32, input_dim=4, activation='sigmoid'))
+model.add(Dense(8, activation='sigmoid'))
 model.add(Dense(1, activation='sigmoid'))
 
-model.compile(optimizer='rmsprop',
-              loss='binary_crossentropy',
+sgd = SGD(lr=0.01, momentum=0.9, nesterov=True)
+model.compile(optimizer= sgd,
+              loss='mean_squared_error',
               metrics=['accuracy'])
 
-model.fit(data_train, target_train, epochs=10, batch_size=1)
+model.fit(data_train, target_train, epochs=20, batch_size=1)
 loss_and_metrics = model.evaluate(data_test, target_test, batch_size=2)
