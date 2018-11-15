@@ -2,6 +2,7 @@ import math
 import numpy as np
 from scipy.stats import logistic
 from copy import deepcopy
+import random
 
 class FeedForwardNeuralNetwork:
     def __init__(self, learning_rate, hidden_layer_sizes, max_iter=300, tol=0.0001, batch_size=1, momentum=0):
@@ -40,7 +41,7 @@ class FeedForwardNeuralNetwork:
             for _ in range(neuron_sizes[neuron_index]):
                 neuron_weight = []
                 for _ in range(neuron_sizes[neuron_index+1]):
-                    neuron_weight.append(0.5)
+                    neuron_weight.append(np.random.normal(-0,0.3,1)[0])
                 layer_weight.append(neuron_weight)
             layer_weight = np.array(layer_weight)
             self.coefs_.append(layer_weight)
@@ -52,7 +53,7 @@ class FeedForwardNeuralNetwork:
         for size in intercept_neuron_sizes:
             bias_layer = []
             for _ in range(size):
-                bias_layer.append(0.5)
+                bias_layer.append(np.random.normal(-0,0.3,1)[0])
             bias_layer = np.array(bias_layer)
             self.intercepts_.append(bias_layer)
             self.delta_intercepts_.append(bias_layer)
