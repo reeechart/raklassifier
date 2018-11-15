@@ -16,7 +16,8 @@ class FeedForwardNeuralNetwork:
         self.intercepts_ = []
         self.gradients_ = []
         self.delta_gradients_ = []
-        self.delta_coefs = []
+        self.delta_coefs_ = []
+        self.delta_intercepts_ =[]
         self.layers_input = []
         self.error_ = 0
         self.result_ = 0
@@ -43,7 +44,7 @@ class FeedForwardNeuralNetwork:
                 layer_weight.append(neuron_weight)
             layer_weight = np.array(layer_weight)
             self.coefs_.append(layer_weight)
-            self.delta_coefs.append(layer_weight)
+            self.delta_coefs_.append(layer_weight)
 
     def _initialize_intercepts(self, data):
         output_neuron_size = 1
@@ -54,6 +55,7 @@ class FeedForwardNeuralNetwork:
                 bias_layer.append(0)
             bias_layer = np.array(bias_layer)
             self.intercepts_.append(bias_layer)
+            self.delta_intercepts_.append(bias_layer)
     
     def _initialize_gradients(self):
         ''' Reset the gradients to initial weight '''
@@ -84,6 +86,8 @@ class FeedForwardNeuralNetwork:
             # add with bias and convert all results with sigmoid function
             for result_index in range(len(self.result_)):
                 self.result_[result_index] = [x+y for x, y in zip(self.result_[result_index], self.intercepts_[layer_index])]
+                print('this is the result for layer index %d' % result_index)
+                print(self.result_[result_index])
                 self.result_[result_index] = logistic.cdf(self.result_[result_index])
 
             # save to delta_gradients
@@ -94,8 +98,8 @@ class FeedForwardNeuralNetwork:
         # print('this is delta gradient with length of %d' % len(self.delta_gradients_))
         # print(self.delta_gradients_)
 
-        print('this is layers input with length of %d' % len(self.layers_input))
-        print(self.layers_input)
+        # print('this is layers input with length of %d' % len(self.layers_input))
+        # print(self.layers_input)
 
         # print('this is the result')
         # print(self.result_)
@@ -114,29 +118,38 @@ class FeedForwardNeuralNetwork:
                 self.delta_gradients_[-1] = self.delta_gradients_[-1] * (1 - self.delta_gradients_[-1]) * np.reshape(diff, (len(diff), 1))
             else:
                 # hidden layers
-                print('this is coefs')
-                print(self.coefs_)
-                print('this is delta_gradients')
-                print(self.delta_gradients_)
                 sum_outputs_gradients = np.matmul(self.delta_gradients_[dg_length-i], np.transpose(self.coefs_[dg_length-i]))
                 self.delta_gradients_[dg_length-i-1] = self.delta_gradients_[dg_length-i-1] * (1 - self.delta_gradients_[dg_length-i-1]) * sum_outputs_gradients
             
-        print('this is delta gradient with length of %d' % len(self.delta_gradients_))
-        print(self.delta_gradients_)
+        # print('this is delta gradient after backpropagation with length of %d' % len(self.delta_gradients_))
+        # print(self.delta_gradients_)
 
     def _update_weight(self, batch_data, batch_target):
         compressed_delta_input = []
         for i in range(len(self.delta_gradients_)):
             compressed_delta_input.append(np.matmul(np.transpose(self.layers_input[i]), self.delta_gradients_[i]))
-        print('this is compressed delta input')
-        print(compressed_delta_input)
-        
-        print('this is delta coefs')
-        print(self.delta_coefs)
+       
+        # print('this is compressed delta input')
+        # print(compressed_delta_input)
+
+        # print('this is delta coefs')
+        # print(self.delta_coefs_)
+
         compressed_delta_input = np.array(compressed_delta_input)
-        for i in range(len(self.delta_coefs)):
-            self.delta_coefs[i] = self.learning_rate * compressed_delta_input[i] + self.momentum * self.delta_coefs[i]
-            self.coefs_[i] = np.add(self.coefs_[i], self.delta_coefs[i])
+        for i in range(len(self.delta_coefs_)):
+            self.delta_coefs_[i] = self.learning_rate * compressed_delta_input[i] + self.momentum * self.delta_coefs_[i]
+            self.coefs_[i] = np.add(self.coefs_[i], self.delta_coefs_[i])
+
+        self.gradients_ = self._compress_delta_gradient()
+        for i in range(len(self.delta_intercepts_)):
+            self.delta_intercepts_[i] = self.learning_rate * self.gradients_[i] + self.momentum * self.delta_intercepts_[i]
+            self.intercepts_[i] = np.add(self.intercepts_[i], self.delta_intercepts_[i])
+
+        # print('coefs after update')
+        # print(self.coefs_)
+
+        # print('intercepts after update')
+        # print(self.intercepts_)
 
     def _split_data(self, data, target):
         batch_data_list = []
@@ -167,10 +180,6 @@ class FeedForwardNeuralNetwork:
             self.error_ = 0
             for batch_index in range(batches):
                 res = self._feed_forward_phase(batch_data_list[batch_index], batch_target_list[batch_index])
-                print("this is the result for batch %d" % batch_index)
-                print(res)
-                print("doing backpropagation...")
-                print("==================================================================")
                 self._backpropagation(batch_target_list[batch_index], res)
                 self._update_weight(batch_data_list[batch_index], batch_target_list[batch_index])
             iter += 1

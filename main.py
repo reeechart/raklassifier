@@ -4,7 +4,7 @@ from sklearn import datasets
 
 iris = datasets.load_iris()
 
-clf_ffnn = FeedForwardNeuralNetwork(learning_rate=0.4, hidden_layer_sizes=[5,2], batch_size=len(iris.data), max_iter=4)
+clf_ffnn = FeedForwardNeuralNetwork(learning_rate=0.25, hidden_layer_sizes=[5,2], batch_size=len(iris.data), max_iter=4, momentum=0.1)
 print(clf_ffnn.learning_rate)
 print(clf_ffnn.hidden_layer_sizes)
 print(clf_ffnn.tol)
