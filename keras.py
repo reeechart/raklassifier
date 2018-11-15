@@ -1,20 +1,17 @@
 from keras.models import Sequential
 from keras.layers import Dense
 import pandas as pd
-
 data_tennis = pd.read_csv("tennis.csv", dtype="category")
 
 outlook_dict = {"sunny":0, "overcast":1, "rainy":2 }
-temp_dict = {"hot":0, "mild":1, "cool":2}
-humidity_dict = {"high":0, "normal":1}
-windy_dict = {"False": 0, "True":1}
+windy_dict = {"FALSE": 0, "TRUE":1}
 play_dict = {"no":0, "yes":1}
 
-# Encode string category to integer
-for column in data_tennis:
-    data_tennis[column] = data_tennis[column].cat.codes
 
-    
+data_tennis["outlook"] = data_tennis["outlook"].cat.codes
+data_tennis["windy"] = data_tennis["windy"].cat.codes
+data_tennis["play"] = data_tennis["play"].cat.codes
+ 
 target_tennis = data_tennis.play
 data_tennis = data_tennis.drop("play", axis=1)
 
